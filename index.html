@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>캠퍼스나누미 (CampusNanumi) - 대학생 교내 물품 공유 & 나눔 플랫폼</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            everytime: '#c62917',
+          }
+        }
+      }
+    </script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #f3f4f6;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .chat-bubble-me {
+      border-bottom-right-radius: 2px;
+    }
+    .chat-bubble-other {
+      border-bottom-left-radius: 2px;
+    }
+  </style>
+</head>
+<body class="h-screen flex justify-center items-center overflow-hidden">
+
+  <!-- Mobile View Frame Container -->
+  <div class="w-full max-w-md h-full sm:h-[94vh] bg-white sm:rounded-2xl sm:shadow-2xl flex flex-col relative overflow-hidden border border-gray-200">
+    
+    <!-- TOP HEADER -->
+    <header class="bg-indigo-600 text-white p-4 shadow-md flex items-center justify-between z-10">
+      <div class="flex items-center space-x-2 cursor-pointer" onclick="switchTab('feed')">
+        <i class="fa-solid fa-hand-holding-heart text-2xl text-yellow-300"></i>
+        <div>
+          <h1 class="font-extrabold text-lg leading-tight tracking-tight">캠퍼스나누미</h1>
+          <p class="text-[10px] text-indigo-200">교내 물품 대여 · 나눔 플랫폼</p>
+        </div>
+      </div>
+      
+      <!-- School Selector Dropdown -->
+      <div class="flex items-center space-x-2">
+        <div class="relative inline-block text-left">
+          <select id="schoolSelect" onchange="changeActiveSchool(this.value)" class="bg-indigo-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-indigo-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 cursor-pointer">
+            <option value="안산대학교" selected>🏫 안산대학교</option>
+            <option value="가톨릭대학교">🏫 가톨릭대학교</option>
+            <option value="서울대학교">🏫 서울대학교</option>
+            <option value="연세대학교">🏫 연세대학교</option>
+            <option value="전체 학교">🌐 전체 학교 보기</option>
+          </select>
+        </div>
+
+        <!-- User Profile Quick Switch Button -->
+        <button onclick="openProfileModal()" class="w-8 h-8 rounded-full bg-indigo-500 border border-indigo-300 flex items-center justify-center hover:bg-indigo-400 transition" title="내 프로필 및 학과 설정">
+          <i class="fa-solid fa-user text-xs"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ACTIVE USER & SCHOOL BANNER -->
+    <div class="bg-indigo-50 border-b border-indigo-100 px-4 py-2 flex justify-between items-center text-xs">
+      <div class="flex items-center space-x-1 text-indigo-900 font-medium overflow-hidden text-ellipsis whitespace-nowrap">
+        <span class="bg-indigo-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold" id="currentSchoolBadge">안산대학교</span>
+        <span class="text-gray-700 font-bold" id="userNicknameDisplay">나누미 학생</span>
+        <span class="bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-semibold text-[11px]" id="userDeptDisplay">컴퓨터공학과</span>
+      </div>
+      <button onclick="openProfileModal()" class="text-[11px] text-indigo-600 underline hover:text-indigo-800 shrink-0 font-medium">
+        계정 변경 / 변경 <i class="fa-solid fa-pen text-[9px]"></i>
+      </button>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 overflow-y-auto custom-scrollbar relative bg-gray-50 pb-20" id="mainContent">
+
+      <!-- ================= TAB 1: ALL POSTS FEED ================= -->
+      <section id="feedTab" class="p-3 space-y-3">
+        <!-- Banner -->
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-3.5 text-white shadow-sm flex justify-between items-center">
+          <div>
+            <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">우리 캠퍼스 나눔</span>
+            <h2 class="text-sm font-bold mt-1">안 쓰는 전공서적, 수선 우산 나누고<br>필요할 땐 캠퍼스에서 빌려 쓰세요!</h2>
+          </div>
+          <i class="fa-solid fa-box-open text-4xl text-white/30 ml-2"></i>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 space-y-2">
+          <!-- Search input -->
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-xs"></i>
+            <input type="text" id="searchInput" onkeyup="filterPosts()" placeholder="물품명, 교재 이름, 수령 장소 검색..." class="w-full bg-gray-100 text-xs pl-8 pr-3 py-2 rounded-lg border-none focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+
+          <!-- Type filter tabs -->
+          <div class="flex space-x-1.5 text-xs font-semibold overflow-x-auto custom-scrollbar py-0.5">
+            <button onclick="filterType('ALL')" id="filterTypeALL" class="type-btn active bg-indigo-600 text-white px-3 py-1 rounded-full whitespace-nowrap">전체</button>
+            <button onclick="filterType('요청')" id="filterType요청" class="type-btn bg-gray-100 text-gray-600 px-3 py-1 rounded-full whitespace-nowrap hover:bg-gray-200">🙋‍♂️ 구해요(요청)</button>
+            <button onclick="filterType('대여')" id="filterType대여" class="type-btn bg-gray-100 text-gray-600 px-3 py-1 rounded-full whitespace-nowrap hover:bg-gray-200">🤝 빌려드려요</button>
+            <button onclick="filterType('나눔')" id="filterType나눔" class="type-btn bg-gray-100 text-gray-600 px-3 py-1 rounded-full whitespace-nowrap hover:bg-gray-200">🎁 무료나눔</button>
+            <button onclick="filterType('교환')" id="filterType교환" class="type-btn bg-gray-100 text-gray-600 px-3 py-1 rounded-full whitespace-nowrap hover:bg-gray-200">🔄 교환해요</button>
+          </div>
+
+          <!-- Category filter horizontal list -->
+          <div class="flex space-x-1 text-[11px] overflow-x-auto custom-scrollbar pt-1 text-gray-500 border-t border-gray-100">
+            <button onclick="filterCat('ALL')" class="cat-btn font-bold text-indigo-600 px-2 py-0.5">전체 카테고리</button>
+            <button onclick="filterCat('전공/교재')" class="cat-btn hover:text-indigo-600 px-2 py-0.5">📘 전공/교재</button>
+            <button onclick="filterCat('전자기기')" class="cat-btn hover:text-indigo-600 px-2 py-0.5">💻 전자기기</button>
+            <button onclick="filterCat('생활/우산')" class="cat-btn hover:text-indigo-600 px-2 py-0.5">☂️ 생활/우산</button>
+            <button onclick="filterCat('체육/돗자리')" class="cat-btn hover:text-indigo-600 px-2 py-0.5">⚽ 체육/돗자리</button>
+            <button onclick="filterCat('기타')" class="cat-btn hover:text-indigo-600 px-2 py-0.5">📦 기타</button>
+          </div>
+        </div>
+
+        <!-- Post List Container -->
+        <div id="postsList" class="space-y-2.5">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: REQUEST POSTS (물품 요청) ================= -->
+      <section id="requestTab" class="p-3 space-y-3 hidden">
+        <div class="bg-amber-500 text-white rounded-xl p-3.5 shadow-sm">
+          <h2 class="text-sm font-bold"><i class="fa-solid fa-hand-sparkles mr-1"></i> 급하게 필요한 물품이 있나요?</h2>
+          <p class="text-xs text-amber-100 mt-0.5">학과 도서, 충전기, 우산 등을 같은 학교 학우에게 요청해 보세요.</p>
+        </div>
+        <div id="requestPostsList" class="space-y-2.5">
+          <!-- Filtered request posts -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: SHARE & RENTAL POSTS (나눔/대여) ================= -->
+      <section id="shareTab" class="p-3 space-y-3 hidden">
+        <div class="bg-emerald-600 text-white rounded-xl p-3.5 shadow-sm">
+          <h2 class="text-sm font-bold"><i class="fa-solid fa-gift mr-1"></i> 안 쓰는 책이나 물품을 나눠주세요!</h2>
+          <p class="text-xs text-emerald-100 mt-0.5">무료 나눔 및 착한 임대로 캠퍼스 선순환을 만듭니다.</p>
+        </div>
+        <div id="sharePostsList" class="space-y-2.5">
+          <!-- Filtered share posts -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: 1:1 CHAT LIST & ROOM ================= -->
+      <section id="chatTab" class="h-full flex flex-col hidden">
+        <!-- CHAT ROOM LIST VIEW -->
+        <div id="chatListView" class="p-3 space-y-2 flex-1 overflow-y-auto custom-scrollbar">
+          <div class="flex justify-between items-center px-1 mb-1">
+            <h2 class="font-bold text-sm text-gray-800"><i class="fa-regular fa-comments text-indigo-600 mr-1"></i> 1:1 개인 대화목록</h2>
+            <span class="text-[11px] text-gray-400">캠퍼스 조율 공간</span>
+          </div>
+          <div id="chatRoomsContainer" class="space-y-2">
+            <!-- Dynamic Chat Room items -->
+          </div>
+        </div>
+
+        <!-- CHAT DETAIL ROOM VIEW (Hidden by default) -->
+        <div id="chatRoomView" class="h-full flex flex-col bg-slate-100 hidden relative">
+          <!-- Chat Header -->
+          <div class="bg-white border-b border-gray-200 p-3 flex items-center justify-between shadow-sm z-10">
+            <div class="flex items-center space-x-2">
+              <button onclick="closeChatRoom()" class="text-gray-600 hover:text-gray-900 p-1">
+                <i class="fa-solid fa-chevron-left text-lg"></i>
+              </button>
+              <div>
+                <div class="flex items-center space-x-1.5">
+                  <span id="chatOpponentName" class="font-bold text-sm text-gray-900">상대방</span>
+                  <span id="chatOpponentDept" class="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded font-semibold">학과</span>
+                  <span id="chatOpponentSchool" class="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded">학교</span>
+                </div>
+                <p id="chatPostTitlePreview" class="text-[11px] text-gray-500 font-medium truncate max-w-[200px]">관련 게시글 제목</p>
+              </div>
+            </div>
+            <button onclick="alert('신고 및 차단 기능: 매너있는 캠퍼스 문화 조성을 위해 상대방을 모니터링 중입니다.')" class="text-gray-400 hover:text-red-500 text-xs">
+              <i class="fa-solid fa-shield-halved"></i>
+            </button>
+          </div>
+
+          <!-- Item Banner info inside chat -->
+          <div id="chatItemBanner" class="bg-white/90 backdrop-blur px-3 py-2 border-b border-gray-200 flex justify-between items-center text-xs">
+            <div class="flex items-center space-x-2 overflow-hidden">
+              <span id="chatItemTypeBadge" class="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">대여</span>
+              <span id="chatItemName" class="font-semibold text-gray-800 truncate">물품명</span>
+            </div>
+            <span id="chatItemStatus" class="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded font-bold">진행중</span>
+          </div>
+
+          <!-- Messages Container -->
+          <div id="chatMessages" class="flex-1 p-3 overflow-y-auto custom-scrollbar space-y-2.5">
+            <!-- Messages rendered dynamically -->
+          </div>
+
+          <!-- Message Input Bar -->
+          <div class="p-2.5 bg-white border-t border-gray-200 flex items-center space-x-2">
+            <input type="text" id="chatInput" onkeypress="if(event.key==='Enter') sendChatMessage()" placeholder="메시지를 입력하세요..." class="flex-1 bg-gray-100 text-xs px-3 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-indigo-500 outline-none">
+            <button onclick="sendChatMessage()" class="bg-indigo-600 text-white p-2.5 rounded-xl hover:bg-indigo-700 transition flex items-center justify-center w-10 h-10 shrink-0">
+              <i class="fa-solid fa-paper-plane text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 5: MY PAGE ================= -->
+      <section id="myPageTab" class="p-3 space-y-3 hidden">
+        <!-- My Profile Card -->
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 space-y-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold shadow-md" id="myAvatar">
+              나
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="font-bold text-base text-gray-900" id="myPageNickname">나누미 학생</h3>
+                <span class="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded font-bold" id="myPageSchool">안산대학교</span>
+              </div>
+              <p class="text-xs text-indigo-600 font-semibold mt-0.5" id="myPageDept"><i class="fa-solid fa-graduation-cap"></i> 컴퓨터공학과</p>
+              <p class="text-[11px] text-gray-400 mt-1">캠퍼스 매너 온도 99℃ 🔥</p>
+            </div>
+          </div>
+          <button onclick="openProfileModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs py-2 rounded-lg font-semibold transition">
+            <i class="fa-solid fa-user-pen mr-1"></i> 프로필 & 소속 학과 수정
+          </button>
+        </div>
+
+        <!-- Quick Switch Test Account (To test 1:1 chat realistically!) -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-indigo-900"><i class="fa-solid fa-users-arrows mr-1"></i> 테스트 계정 빠른 전환</span>
+            <span class="text-[10px] text-indigo-600 font-medium">1:1 대화 테스트용</span>
+          </div>
+          <p class="text-[11px] text-indigo-700">원하는 테스트 계정을 클릭하면 해당 학과 학생으로 로그인되어 상대방 시점에서 대화할 수 있습니다.</p>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button onclick="switchToDemoAccount('컴공_김철수')" class="bg-white border border-indigo-200 p-2 rounded-lg text-left hover:border-indigo-500 transition">
+              <div class="font-bold text-gray-800">김철수 (안산대)</div>
+              <div class="text-[10px] text-indigo-600 font-semibold">💻 컴퓨터공학과</div>
+            </button>
+            <button onclick="switchToDemoAccount('간호_이영희')" class="bg-white border border-indigo-200 p-2 rounded-lg text-left hover:border-indigo-500 transition">
+              <div class="font-bold text-gray-800">이영희 (안산대)</div>
+              <div class="text-[10px] text-indigo-600 font-semibold">🩺 간호학과</div>
+            </button>
+            <button onclick="switchToDemoAccount('경영_박민수')" class="bg-white border border-indigo-200 p-2 rounded-lg text-left hover:border-indigo-500 transition">
+              <div class="font-bold text-gray-800">박민수 (안산대)</div>
+              <div class="text-[10px] text-indigo-600 font-semibold">📊 경영학과</div>
+            </button>
+            <button onclick="switchToDemoAccount('디자인_최유진')" class="bg-white border border-indigo-200 p-2 rounded-lg text-left hover:border-indigo-500 transition">
+              <div class="font-bold text-gray-800">최유진 (가톨릭대)</div>
+              <div class="text-[10px] text-indigo-600 font-semibold">🎨 시각디자인과</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- My Posts Section -->
+        <div class="space-y-2">
+          <h4 class="font-bold text-xs text-gray-700 px-1"><i class="fa-solid fa-list-check text-indigo-600 mr-1"></i> 내가 작성한 글 관리</h4>
+          <div id="myPostsList" class="space-y-2">
+            <!-- My posts list -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FLOATING ACTION BUTTON (FAB) FOR CREATING POST -->
+    <button onclick="openCreateModal()" class="absolute right-4 bottom-16 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-3 rounded-full shadow-lg flex items-center space-x-2 z-20 transition transform active:scale-95">
+      <i class="fa-solid fa-plus text-base"></i>
+      <span class="text-xs">글쓰기</span>
+    </button>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav class="bg-white border-t border-gray-200 grid grid-cols-5 py-2 absolute bottom-0 inset-x-0 z-10 text-center">
+      <button onclick="switchTab('feed')" id="nav-feed" class="flex flex-col items-center justify-center text-indigo-600">
+        <i class="fa-solid fa-house text-base"></i>
+        <span class="text-[10px] mt-0.5 font-semibold">홈/전체</span>
+      </button>
+      <button onclick="switchTab('request')" id="nav-request" class="flex flex-col items-center justify-center text-gray-400 hover:text-indigo-600">
+        <i class="fa-solid fa-hand-holding-hand text-base"></i>
+        <span class="text-[10px] mt-0.5 font-semibold">요청해요</span>
+      </button>
+      <button onclick="switchTab('share')" id="nav-share" class="flex flex-col items-center justify-center text-gray-400 hover:text-indigo-600">
+        <i class="fa-solid fa-box-tissue text-base"></i>
+        <span class="text-[10px] mt-0.5 font-semibold">나눔/대여</span>
+      </button>
+      <button onclick="switchTab('chat')" id="nav-chat" class="flex flex-col items-center justify-center text-gray-400 hover:text-indigo-600 relative">
+        <i class="fa-solid fa-comments text-base"></i>
+        <span class="text-[10px] mt-0.5 font-semibold">1:1 채팅</span>
+        <span id="chatBadge" class="hidden absolute top-1 right-4 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">1</span>
+      </button>
+      <button onclick="switchTab('myPage')" id="nav-myPage" class="flex flex-col items-center justify-center text-gray-400 hover:text-indigo-600">
+        <i class="fa-solid fa-user text-base"></i>
+        <span class="text-[10px] mt-0.5 font-semibold">마이페이지</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ================= MODAL 1: CREATE POST ================= -->
+  <div id="createModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+    <div class="bg-white w-full max-w-md rounded-2xl p-4 space-y-3 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-base text-gray-800"><i class="fa-solid fa-pen-to-square text-indigo-600 mr-1"></i> 물품 게시글 등록</h3>
+        <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="createPostForm" onsubmit="handleCreatePost(event)" class="space-y-3 text-xs">
+        <!-- School notice -->
+        <div class="bg-indigo-50 text-indigo-800 p-2 rounded-lg flex items-center justify-between">
+          <span>작성 대학교: <strong id="modalSchoolName">안산대학교</strong></span>
+          <span>작성자: <strong id="modalUserDept">컴퓨터공학과 김철수</strong></span>
+        </div>
+
+        <!-- Post Type -->
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">게시글 유형 <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-4 gap-1.5">
+            <label class="cursor-pointer">
+              <input type="radio" name="postType" value="요청" checked class="peer hidden">
+              <div class="p-2 border rounded-lg text-center peer-checked:bg-amber-500 peer-checked:text-white peer-checked:border-amber-500 font-semibold">🙋‍♂️ 요청(구함)</div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="postType" value="대여" class="peer hidden">
+              <div class="p-2 border rounded-lg text-center peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 font-semibold">🤝 대여(빌림)</div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="postType" value="나눔" class="peer hidden">
+              <div class="p-2 border rounded-lg text-center peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 font-semibold">🎁 무료나눔</div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="postType" value="교환" class="peer hidden">
+              <div class="p-2 border rounded-lg text-center peer-checked:bg-purple-600 peer-checked:text-white peer-checked:border-purple-600 font-semibold">🔄 교환</div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Title & Category -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="col-span-2">
+            <label class="block font-bold text-gray-700 mb-1">제목 <span class="text-red-500">*</span></label>
+            <input type="text" id="postTitle" required placeholder="예: C언어 전공서적 3시간만 빌려요" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-gray-700 mb-1">카테고리</label>
+            <select id="postCategory" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option value="전공/교재">📘 전공/교재</option>
+              <option value="전자기기">💻 전자기기</option>
+              <option value="생활/우산">☂️ 생활/우산</option>
+              <option value="체육/돗자리">⚽ 체육/돗자리</option>
+              <option value="기타">📦 기타</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Item Name & Price/Deposit -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-gray-700 mb-1">물품명 <span class="text-red-500">*</span></label>
+            <input type="text" id="postItemName" required placeholder="예: 명품 C언어 프로그래밍 개정판" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-gray-700 mb-1">비용 / 보증금</label>
+            <input type="text" id="postPrice" placeholder="예: 무료 / 음료수 1캔 / 2,000원" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+        </div>
+
+        <!-- Place & Time -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-gray-700 mb-1">교내 희망 장소 <span class="text-red-500">*</span></label>
+            <input type="text" id="postLocation" required placeholder="예: 진리관 1층 로비 / 학생식당 앞" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block font-bold text-gray-700 mb-1">희망 일시</label>
+            <input type="text" id="postDateTime" placeholder="예: 오늘 오후 2시~5시" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+        </div>
+
+        <!-- Icon/Image preset selection -->
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">물품 대표 아이콘 선택</label>
+          <div class="flex space-x-2">
+            <select id="postIcon" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option value="📘">📘 전공 책</option>
+              <option value="💻">💻 노트북 / 패드</option>
+              <option value="🔌">🔌 충전기 / 케이블</option>
+              <option value="☂️">☂️ 우산 / 양산</option>
+              <option value="🏕️">🏕️ 돗자리 / 돗자리용품</option>
+              <option value="🎧">🎧 헤드폰 / 이어폰</option>
+              <option value="⚽">⚽ 체육 용품 / 공</option>
+              <option value="🎁">🎁 기타 생활용품</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">상세 설명 <span class="text-red-500">*</span></label>
+          <textarea id="postContent" rows="3" required placeholder="필요한 이유나 대여 조건, 깨끗이 사용하겠다는 다짐 등을 자유롭게 적어주세요." class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex space-x-2 pt-1">
+          <button type="button" onclick="closeCreateModal()" class="w-1/3 bg-gray-200 text-gray-700 py-2.5 rounded-xl font-bold">취소</button>
+          <button type="submit" class="w-2/3 bg-indigo-600 text-white py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition">게시글 등록하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 2: POST DETAIL ================= -->
+  <div id="detailModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+    <div class="bg-white w-full max-w-md rounded-2xl p-4 space-y-3 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl relative">
+      <button onclick="closeDetailModal()" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600 p-1">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div id="detailContent">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 3: PROFILE / ACCOUNTS EDIT ================= -->
+  <div id="profileModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+    <div class="bg-white w-full max-w-md rounded-2xl p-4 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-base text-gray-800"><i class="fa-solid fa-id-card text-indigo-600 mr-1"></i> 프로필 & 소속 학과 설정</h3>
+        <button onclick="closeProfileModal()" class="text-gray-400 hover:text-gray-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSaveProfile(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">소속 대학교 선택</label>
+          <select id="editSchool" class="w-full border rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-indigo-500 outline-none">
+            <option value="안산대학교">🏫 안산대학교</option>
+            <option value="가톨릭대학교">🏫 가톨릭대학교</option>
+            <option value="서울대학교">🏫 서울대학교</option>
+            <option value="연세대학교">🏫 연세대학교</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">닉네임 <span class="text-red-500">*</span></label>
+          <input type="text" id="editNickname" required class="w-full border rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="닉네임 입력">
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">소속 학과 명시 <span class="text-red-500">* (필수)</span></label>
+          <input type="text" id="editDept" required class="w-full border rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 컴퓨터공학과, 간호학과, 경영학과">
+          <p class="text-[10px] text-indigo-600 mt-1">* 학과 명시는 교내 신뢰도를 높이며 작성한 게시글 및 채팅방에 표시됩니다.</p>
+        </div>
+
+        <div class="pt-2 flex space-x-2">
+          <button type="button" onclick="closeProfileModal()" class="w-1/3 bg-gray-200 text-gray-700 py-2.5 rounded-xl font-bold">취소</button>
+          <button type="submit" class="w-2/3 bg-indigo-600 text-white py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition">저장하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- JS APPLICATION LOGIC -->
+  <script>
+    // ================= GLOBAL STATE =================
+    const STORAGE_KEY_POSTS = 'campus_nanumi_posts_v1';
+    const STORAGE_KEY_USER = 'campus_nanumi_user_v1';
+    const STORAGE_KEY_CHATS = 'campus_nanumi_chats_v1';
+
+    // Current Logged-In User Profile (Default: 안산대학교 컴퓨터공학과)
+    let currentUser = {
+      id: 'usr_default',
+      nickname: '김철수',
+      school: '안산대학교',
+      dept: '컴퓨터공학과',
+    };
+
+    // Filter states
+    let activeSchoolFilter = '안산대학교';
+    let activeTypeFilter = 'ALL';
+    let activeCategoryFilter = 'ALL';
+    let currentActiveChatId = null;
+
+    // Initial Mock Data (If localStorage is empty)
+    const initialMockPosts = [
+      {
+        id: 'post_1',
+        type: '요청',
+        school: '안산대학교',
+        category: '전공/교재',
+        title: 'C언어 프로그래밍 전공 서적 2시간만 빌릴 수 있을까요?',
+        itemName: '명품 C언어 프로그래밍',
+        price: '음료수 1캔',
+        location: '진리관 2층 실습실 앞',
+        dateTime: '오늘 14:00 ~ 16:00',
+        icon: '📘',
+        content: '실습 수업 중에 교재를 집에 두고 와서 급하게 구합니다! 깨끗이 보고 바로 반납하겠습니다.',
+        authorId: 'usr_demo_1',
+        authorNickname: '이영희',
+        authorDept: '간호학과',
+        authorSchool: '안산대학교',
+        status: '진행중', // '진행중' or '해결완료'
+        likes: 3,
+        createdAt: '10분 전'
+      },
+      {
+        id: 'post_2',
+        type: '대여',
+        school: '안산대학교',
+        category: '전자기기',
+        title: 'C타입 맥북 충전기 및 HDMI 젠더 빌려드립니다',
+        itemName: 'C타입 65W 충전기 + Multi Port',
+        price: '무료 (감사 인사)',
+        location: '자유관 도서관 1층 열람실',
+        dateTime: '오늘 18:00까지 가능',
+        icon: '💻',
+        content: '도서관에서 공부하고 있어서 자유관 1층 오시면 바로 전해드릴 수 있어요.',
+        authorId: 'usr_demo_2',
+        authorNickname: '박민수',
+        authorDept: '경영학과',
+        authorSchool: '안산대학교',
+        status: '진행중',
+        likes: 5,
+        createdAt: '25분 전'
+      },
+      {
+        id: 'post_3',
+        type: '나눔',
+        school: '안산대학교',
+        category: '생활/우산',
+        title: '갑자기 비 오는데 장우산 2개 무료 나눔합니다!',
+        itemName: '튼튼한 장우산 (검정/파랑)',
+        price: '무료나눔 🎁',
+        location: '학생식당 입구',
+        dateTime: '지금 바로 수령 가능',
+        icon: '☂️',
+        content: '동아리 방에 우산이 많아서 나눔해요. 필요하신 분 채팅주세요!',
+        authorId: 'usr_default',
+        authorNickname: '김철수',
+        authorDept: '컴퓨터공학과',
+        authorSchool: '안산대학교',
+        status: '진행중',
+        likes: 8,
+        createdAt: '40분 전'
+      },
+      {
+        id: 'post_4',
+        type: '요청',
+        school: '안산대학교',
+        category: '체육/돗자리',
+        title: '잔디밭에서 쉴 돗자리 2인용 구합니다',
+        itemName: '돗자리 / 피크닉매트',
+        price: '바나나우유 1개',
+        location: '본관 앞 잔디밭',
+        dateTime: '오늘 15:00 ~ 17:00',
+        icon: '🏕️',
+        content: '공강 시간에 친구랑 잔디밭에 앉아서 쉬려고 하는데 있으신 분 빌려주시면 감사하겠습니다!',
+        authorId: 'usr_demo_3',
+        authorNickname: '최유진',
+        authorDept: '시각디자인과',
+        authorSchool: '가톨릭대학교',
+        status: '해결완료',
+        likes: 2,
+        createdAt: '1시간 전'
+      }
+    ];
+
+    const initialMockChats = [
+      {
+        id: 'chat_1',
+        postId: 'post_1',
+        postTitle: 'C언어 프로그래밍 전공 서적 2시간만 빌릴 수 있을까요?',
+        postType: '요청',
+        itemName: '명품 C언어 프로그래밍',
+        user1: { id: 'usr_default', nickname: '김철수', dept: '컴퓨터공학과', school: '안산대학교' },
+        user2: { id: 'usr_demo_1', nickname: '이영희', dept: '간호학과', school: '안산대학교' },
+        messages: [
+          { senderId: 'usr_demo_1', text: '안녕하세요! 혹시 C언어 교재 아직 빌려주실 수 있나요?', time: '14:02' },
+          { senderId: 'usr_default', text: '네 안녕하세요! 컴퓨터공학과 2학년 교재 갖고 있어서 진리관 로비로 가져다 드릴게요!', time: '14:05' },
+          { senderId: 'usr_demo_1', text: '우와 너무 감사합니다 ㅠㅠ 5분 뒤에 진리관 1층 자판기 앞으로 갈게요!', time: '14:06' }
+        ]
+      }
+    ];
+
+    // ================= INITIALIZATION =================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      renderApp();
+    });
+
+    function loadState() {
+      // Load user
+      const savedUser = localStorage.getItem(STORAGE_KEY_USER);
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+      } else {
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+      }
+
+      // Load posts
+      const savedPosts = localStorage.getItem(STORAGE_KEY_POSTS);
+      if (!savedPosts) {
+        localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(initialMockPosts));
+      }
+
+      // Load chats
+      const savedChats = localStorage.getItem(STORAGE_KEY_CHATS);
+      if (!savedChats) {
+        localStorage.setItem(STORAGE_KEY_CHATS, JSON.stringify(initialMockChats));
+      }
+
+      activeSchoolFilter = currentUser.school || '안산대학교';
+      document.getElementById('schoolSelect').value = activeSchoolFilter;
+    }
+
+    function getPosts() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY_POSTS)) || [];
+    }
+
+    function savePosts(posts) {
+      localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts));
+    }
+
+    function getChats() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY_CHATS)) || [];
+    }
+
+    function saveChats(chats) {
+      localStorage.setItem(STORAGE_KEY_CHATS, JSON.stringify(chats));
+    }
+
+    // ================= RENDERING MAIN VIEWS =================
+    function renderApp() {
+      // Header & User Banner Updates
+      document.getElementById('currentSchoolBadge').innerText = activeSchoolFilter;
+      document.getElementById('userNicknameDisplay').innerText = currentUser.nickname;
+      document.getElementById('userDeptDisplay').innerText = currentUser.dept;
+
+      document.getElementById('myPageNickname').innerText = currentUser.nickname;
+      document.getElementById('myPageSchool').innerText = currentUser.school;
+      document.getElementById('myPageDept').innerHTML = `<i class="fa-solid fa-graduation-cap"></i> ${currentUser.dept}`;
+      document.getElementById('myAvatar').innerText = currentUser.nickname.charAt(0);
+
+      renderPosts();
+      renderMyPosts();
+      renderChatRoomsList();
+    }
+
+    function changeActiveSchool(schoolName) {
+      activeSchoolFilter = schoolName;
+      renderApp();
+    }
+
+    function renderPosts() {
+      const posts = getPosts();
+      const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      // Filter logic
+      const filtered = posts.filter(p => {
+        // School isolation filter
+        const matchSchool = (activeSchoolFilter === '전체 학교') || (p.school === activeSchoolFilter);
+        // Type filter
+        const matchType = (activeTypeFilter === 'ALL') || (p.type === activeTypeFilter);
+        // Category filter
+        const matchCat = (activeCategoryFilter === 'ALL') || (p.category === activeCategoryFilter);
+        // Search filter
+        const matchSearch = !searchQuery || 
+          p.title.toLowerCase().includes(searchQuery) ||
+          p.itemName.toLowerCase().includes(searchQuery) ||
+          p.location.toLowerCase().includes(searchQuery) ||
+          p.authorDept.toLowerCase().includes(searchQuery);
+
+        return matchSchool && matchType && matchCat && matchSearch;
+      });
+
+      const feedContainer = document.getElementById('postsList');
+      const reqContainer = document.getElementById('requestPostsList');
+      const shareContainer = document.getElementById('sharePostsList');
+
+      feedContainer.innerHTML = '';
+      reqContainer.innerHTML = '';
+      shareContainer.innerHTML = '';
+
+      if (filtered.length === 0) {
+        const emptyHtml = `
+          <div class="text-center py-10 bg-white rounded-xl border border-gray-100 p-4">
+            <i class="fa-solid fa-folder-open text-3xl text-gray-300 mb-2"></i>
+            <p class="text-xs font-semibold text-gray-500">등록된 게시글이 없습니다.</p>
+            <p class="text-[11px] text-gray-400 mt-0.5">우측 하단 '+' 버튼으로 첫 글을 등록해 보세요!</p>
+          </div>
+        `;
+        feedContainer.innerHTML = emptyHtml;
+        reqContainer.innerHTML = emptyHtml;
+        shareContainer.innerHTML = emptyHtml;
+        return;
+      }
+
+      filtered.forEach(post => {
+        const cardHtml = createPostCardHtml(post);
+        feedContainer.insertAdjacentHTML('beforeend', cardHtml);
+
+        if (post.type === '요청') {
+          reqContainer.insertAdjacentHTML('beforeend', cardHtml);
+        } else {
+          shareContainer.insertAdjacentHTML('beforeend', cardHtml);
+        }
+      });
+    }
+
+    function createPostCardHtml(post) {
+      let typeBadgeClass = 'bg-indigo-600 text-white';
+      if (post.type === '요청') typeBadgeClass = 'bg-amber-500 text-white';
+      if (post.type === '나눔') typeBadgeClass = 'bg-emerald-600 text-white';
+      if (post.type === '교환') typeBadgeClass = 'bg-purple-600 text-white';
+
+      const isResolved = post.status === '해결완료';
+      const statusBadge = isResolved 
+        ? `<span class="bg-gray-200 text-gray-600 text-[10px] px-2 py-0.5 rounded-full font-bold">✓ 해결완료</span>`
+        : `<span class="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full font-bold">● 모집/대여중</span>`;
+
+      return `
+        <div onclick="openDetailModal('${post.id}')" class="bg-white rounded-xl p-3.5 shadow-sm border border-gray-100 hover:border-indigo-300 transition cursor-pointer space-y-2 relative overflow-hidden ${isResolved ? 'opacity-70 bg-gray-50' : ''}">
+          <!-- Header info -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-1.5">
+              <span class="${typeBadgeClass} text-[10px] font-extrabold px-2 py-0.5 rounded-full">${post.type}</span>
+              <span class="bg-indigo-50 text-indigo-700 font-bold text-[10px] px-2 py-0.5 rounded-full">🎓 ${post.authorDept}</span>
+              <span class="text-[10px] text-gray-400 font-medium">${post.school}</span>
+            </div>
+            ${statusBadge}
+          </div>
+
+          <!-- Body Title & Item -->
+          <div class="flex space-x-3 items-start">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xl shrink-0">
+              ${post.icon || '📦'}
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold text-xs text-gray-900 leading-snug truncate">${post.title}</h3>
+              <p class="text-[11px] text-gray-600 mt-0.5 truncate">물품: <strong>${post.itemName}</strong> (${post.price || '무료'})</p>
+            </div>
+          </div>
+
+          <!-- Location & Time tags -->
+          <div class="flex flex-wrap gap-2 text-[10px] text-gray-500 pt-1 border-t border-gray-50">
+            <span><i class="fa-solid fa-location-dot text-indigo-500 mr-0.5"></i> ${post.location}</span>
+            <span><i class="fa-regular fa-clock text-amber-500 mr-0.5"></i> ${post.dateTime || '시간 협의'}</span>
+          </div>
+
+          <!-- Footer Author & Likes & Chat trigger -->
+          <div class="flex items-center justify-between pt-1 text-[11px] text-gray-500">
+            <div class="flex items-center space-x-1">
+              <span class="font-semibold text-gray-700">${post.authorNickname}</span>
+              <span class="text-[9px] text-gray-400">• ${post.createdAt}</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="event.stopPropagation(); toggleLike('${post.id}')" class="text-gray-400 hover:text-red-500 font-medium">
+                <i class="fa-regular fa-heart text-xs mr-0.5"></i> ${post.likes || 0}
+              </button>
+              <button onclick="event.stopPropagation(); startOneOnOneChat('${post.id}')" class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded font-bold hover:bg-indigo-100 transition">
+                1:1 대화하기 <i class="fa-solid fa-paper-plane text-[9px]"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ================= DETAIL MODAL & INTERACTIONS =================
+    function openDetailModal(postId) {
+      const posts = getPosts();
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+
+      const isMyPost = post.authorId === currentUser.id;
+      const detailContainer = document.getElementById('detailContent');
+
+      let typeBadgeClass = 'bg-indigo-600 text-white';
+      if (post.type === '요청') typeBadgeClass = 'bg-amber-500 text-white';
+      if (post.type === '나눔') typeBadgeClass = 'bg-emerald-600 text-white';
+
+      detailContainer.innerHTML = `
+        <div class="space-y-3 text-xs">
+          <!-- Type & School & Dept -->
+          <div class="flex items-center justify-between border-b pb-2">
+            <div class="flex items-center space-x-1.5">
+              <span class="${typeBadgeClass} text-[10px] font-extrabold px-2 py-0.5 rounded-full">${post.type}</span>
+              <span class="bg-indigo-100 text-indigo-700 font-bold text-[11px] px-2 py-0.5 rounded">${post.school}</span>
+            </div>
+            <span class="text-gray-400 text-[10px]">${post.createdAt}</span>
+          </div>
+
+          <!-- Author Info Card -->
+          <div class="bg-indigo-50/70 p-2.5 rounded-xl flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <div class="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs">
+                ${post.authorNickname.charAt(0)}
+              </div>
+              <div>
+                <div class="flex items-center space-x-1">
+                  <span class="font-bold text-gray-900">${post.authorNickname}</span>
+                  <span class="bg-indigo-600 text-white text-[9px] px-1.5 py-0.2 rounded font-bold">${post.authorDept}</span>
+                </div>
+                <p class="text-[10px] text-gray-500">매너 온 한 단계 업업!</p>
+              </div>
+            </div>
+            ${isMyPost ? '<span class="bg-gray-200 text-gray-700 text-[9px] px-2 py-0.5 rounded font-bold">내 작성글</span>' : ''}
+          </div>
+
+          <!-- Title & Item Details -->
+          <div>
+            <h2 class="text-base font-extrabold text-gray-900 leading-snug">${post.title}</h2>
+            <div class="mt-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100 space-y-1">
+              <p class="text-gray-700">📦 <strong>물품명:</strong> ${post.itemName}</p>
+              <p class="text-gray-700">💰 <strong>비용/보증금:</strong> ${post.price || '무료'}</p>
+              <p class="text-gray-700">📍 <strong>교내 희망 장소:</strong> ${post.location}</p>
+              <p class="text-gray-700">⏰ <strong>희망 시간:</strong> ${post.dateTime || '시간 협의'}</p>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="bg-white p-3 rounded-xl border border-gray-200">
+            <h4 class="font-bold text-gray-800 mb-1">상세 내용</h4>
+            <p class="text-gray-600 whitespace-pre-line leading-relaxed text-xs">${post.content}</p>
+          </div>
+
+          <!-- Status toggle or Chat button -->
+          <div class="pt-2 flex space-x-2">
+            ${isMyPost ? `
+              <button onclick="togglePostStatus('${post.id}')" class="w-full bg-gray-800 text-white py-2.5 rounded-xl font-bold hover:bg-black transition">
+                <i class="fa-solid fa-arrows-rotate mr-1"></i> 상태 변경 (${post.status === '해결완료' ? '모집중으로 변경' : '해결완료로 변경'})
+              </button>
+            ` : `
+              <button onclick="startOneOnOneChat('${post.id}')" class="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition flex items-center justify-center space-x-1.5 shadow-md">
+                <i class="fa-solid fa-comments"></i>
+                <span>작성자와 1:1 개인 대화하기</span>
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    function toggleLike(postId) {
+      const posts = getPosts();
+      const idx = posts.findIndex(p => p.id === postId);
+      if (idx !== -1) {
+        posts[idx].likes = (posts[idx].likes || 0) + 1;
+        savePosts(posts);
+        renderPosts();
+      }
+    }
+
+    function togglePostStatus(postId) {
+      const posts = getPosts();
+      const idx = posts.findIndex(p => p.id === postId);
+      if (idx !== -1) {
+        posts[idx].status = posts[idx].status === '해결완료' ? '진행중' : '해결완료';
+        savePosts(posts);
+        closeDetailModal();
+        renderApp();
+      }
+    }
+
+    // ================= CREATE POST MODAL =================
+    function openCreateModal() {
+      document.getElementById('modalSchoolName').innerText = activeSchoolFilter === '전체 학교' ? currentUser.school : activeSchoolFilter;
+      document.getElementById('modalUserDept').innerText = `${currentUser.dept} ${currentUser.nickname}`;
+      document.getElementById('createModal').classList.remove('hidden');
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.add('hidden');
+    }
+
+    function handleCreatePost(e) {
+      e.preventDefault();
+      const type = document.querySelector('input[name="postType"]:checked').value;
+      const title = document.getElementById('postTitle').value.trim();
+      const category = document.getElementById('postCategory').value;
+      const itemName = document.getElementById('postItemName').value.trim();
+      const price = document.getElementById('postPrice').value.trim() || '무료';
+      const location = document.getElementById('postLocation').value.trim();
+      const dateTime = document.getElementById('postDateTime').value.trim() || '시간 협의';
+      const icon = document.getElementById('postIcon').value;
+      const content = document.getElementById('postContent').value.trim();
+
+      const newPost = {
+        id: 'post_' + Date.now(),
+        type,
+        school: activeSchoolFilter === '전체 학교' ? currentUser.school : activeSchoolFilter,
+        category,
+        title,
+        itemName,
+        price,
+        location,
+        dateTime,
+        icon,
+        content,
+        authorId: currentUser.id,
+        authorNickname: currentUser.nickname,
+        authorDept: currentUser.dept,
+        authorSchool: currentUser.school,
+        status: '진행중',
+        likes: 0,
+        createdAt: '방금 전'
+      };
+
+      const posts = getPosts();
+      posts.unshift(newPost);
+      savePosts(posts);
+
+      closeCreateModal();
+      document.getElementById('createPostForm').reset();
+      renderApp();
+      alert('게시글이 성공적으로 등록되었습니다!');
+    }
+
+    // ================= 1:1 CHAT SYSTEM =================
+    function startOneOnOneChat(postId) {
+      closeDetailModal();
+      const posts = getPosts();
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+
+      if (post.authorId === currentUser.id) {
+        alert('본인이 작성한 글입니다. 마이페이지에서 내 작성글을 관리할 수 있습니다.');
+        return;
+      }
+
+      const chats = getChats();
+      // Look for existing chat room between currentUser and post author for this post
+      let chat = chats.find(c => c.postId === postId && 
+        ((c.user1.id === currentUser.id && c.user2.id === post.authorId) ||
+         (c.user2.id === currentUser.id && c.user1.id === post.authorId))
+      );
+
+      if (!chat) {
+        chat = {
+          id: 'chat_' + Date.now(),
+          postId: post.id,
+          postTitle: post.title,
+          postType: post.type,
+          itemName: post.itemName,
+          user1: {
+            id: currentUser.id,
+            nickname: currentUser.nickname,
+            dept: currentUser.dept,
+            school: currentUser.school
+          },
+          user2: {
+            id: post.authorId,
+            nickname: post.authorNickname,
+            dept: post.authorDept,
+            school: post.authorSchool
+          },
+          messages: [
+            {
+              senderId: currentUser.id,
+              text: `안녕하세요! '${post.title}' 게시글 보고 대화 요청드립니다.`,
+              time: getCurrentTimeStr()
+            }
+          ]
+        };
+        chats.unshift(chat);
+        saveChats(chats);
+      }
+
+      switchTab('chat');
+      openChatRoom(chat.id);
+    }
+
+    function renderChatRoomsList() {
+      const chats = getChats();
+      const container = document.getElementById('chatRoomsContainer');
+      container.innerHTML = '';
+
+      // Filter chats involving currentUser
+      const myChats = chats.filter(c => c.user1.id === currentUser.id || c.user2.id === currentUser.id);
+
+      if (myChats.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 bg-white rounded-xl border border-gray-100 p-4">
+            <i class="fa-solid fa-comments text-3xl text-gray-300 mb-2"></i>
+            <p class="text-xs font-semibold text-gray-500">참여 중인 1:1 대화방이 없습니다.</p>
+            <p class="text-[11px] text-gray-400 mt-0.5">게시글에서 '1:1 대화하기'를 눌러 장소를 약속해 보세요.</p>
+          </div>
+        `;
+        return;
+      }
+
+      myChats.forEach(chat => {
+        const opponent = chat.user1.id === currentUser.id ? chat.user2 : chat.user1;
+        const lastMsg = chat.messages[chat.messages.length - 1] || { text: '대화를 시작하세요.', time: '' };
+
+        const itemHtml = `
+          <div onclick="openChatRoom('${chat.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:border-indigo-300 cursor-pointer transition flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-400 text-white font-bold flex items-center justify-center shrink-0 text-sm">
+              ${opponent.nickname.charAt(0)}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-bold text-xs text-gray-900">${opponent.nickname}</span>
+                  <span class="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.2 rounded font-semibold">${opponent.dept}</span>
+                </div>
+                <span class="text-[10px] text-gray-400">${lastMsg.time}</span>
+              </div>
+              <p class="text-[11px] font-medium text-indigo-600 truncate mt-0.5">📌 ${chat.itemName}</p>
+              <p class="text-xs text-gray-500 truncate mt-0.5">${lastMsg.text}</p>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', itemHtml);
+      });
+    }
+
+    function openChatRoom(chatId) {
+      currentActiveChatId = chatId;
+      const chats = getChats();
+      const chat = chats.find(c => c.id === chatId);
+      if (!chat) return;
+
+      const opponent = chat.user1.id === currentUser.id ? chat.user2 : chat.user1;
+
+      document.getElementById('chatOpponentName').innerText = opponent.nickname;
+      document.getElementById('chatOpponentDept').innerText = opponent.dept;
+      document.getElementById('chatOpponentSchool').innerText = opponent.school;
+      document.getElementById('chatPostTitlePreview').innerText = chat.postTitle;
+
+      document.getElementById('chatItemTypeBadge').innerText = chat.postType || '물품';
+      document.getElementById('chatItemName').innerText = chat.itemName || '상세 물품';
+
+      document.getElementById('chatListView').classList.add('hidden');
+      document.getElementById('chatRoomView').classList.remove('hidden');
+
+      renderChatMessages();
+    }
+
+    function closeChatRoom() {
+      currentActiveChatId = null;
+      document.getElementById('chatRoomView').classList.add('hidden');
+      document.getElementById('chatListView').classList.remove('hidden');
+      renderChatRoomsList();
+    }
+
+    function renderChatMessages() {
+      if (!currentActiveChatId) return;
+      const chats = getChats();
+      const chat = chats.find(c => c.id === currentActiveChatId);
+      if (!chat) return;
+
+      const container = document.getElementById('chatMessages');
+      container.innerHTML = '';
+
+      chat.messages.forEach(msg => {
+        const isMe = msg.senderId === currentUser.id;
+        const msgHtml = `
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+            <div class="max-w-[75%] ${isMe ? 'bg-indigo-600 text-white chat-bubble-me' : 'bg-white text-gray-800 border border-gray-200 chat-bubble-other'} p-2.5 rounded-2xl text-xs shadow-sm">
+              ${msg.text}
+            </div>
+            <span class="text-[9px] text-gray-400 mt-1 px-1">${msg.time}</span>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', msgHtml);
+      });
+
+      // Scroll to bottom
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text || !currentActiveChatId) return;
+
+      const chats = getChats();
+      const chatIdx = chats.findIndex(c => c.id === currentActiveChatId);
+      if (chatIdx === -1) return;
+
+      const newMsg = {
+        senderId: currentUser.id,
+        text,
+        time: getCurrentTimeStr()
+      };
+
+      chats[chatIdx].messages.push(newMsg);
+      saveChats(chats);
+
+      input.value = '';
+      renderChatMessages();
+
+      // Auto reply demo simulation if opponent is a mock user
+      const chat = chats[chatIdx];
+      const opponent = chat.user1.id === currentUser.id ? chat.user2 : chat.user1;
+      
+      if (opponent.id.startsWith('usr_demo_')) {
+        setTimeout(() => {
+          const autoReplies = [
+            `네! 확인했습니다. 그럼 약속 장소에서 뵐게요! 😊`,
+            `감사합니다! 깨끗하게 사용하고 곧 반납해 드릴게요.`,
+            `네, 혹시 지금 당장 만나는 것도 괜찮으신가요?`,
+            `좋습니다! 학과 수령 장소로 가겠습니다!`
+          ];
+          const randomReply = autoReplies[Math.floor(Math.random() * autoReplies.length)];
+          chats[chatIdx].messages.push({
+            senderId: opponent.id,
+            text: randomReply,
+            time: getCurrentTimeStr()
+          });
+          saveChats(chats);
+          if (currentActiveChatId === chat.id) {
+            renderChatMessages();
+          }
+        }, 1200);
+      }
+    }
+
+    function getCurrentTimeStr() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      return `${hours}:${mins}`;
+    }
+
+    // ================= PROFILE & MY PAGE LOGIC =================
+    function renderMyPosts() {
+      const posts = getPosts();
+      const myPosts = posts.filter(p => p.authorId === currentUser.id);
+      const container = document.getElementById('myPostsList');
+      container.innerHTML = '';
+
+      if (myPosts.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-400 p-3 bg-white rounded-xl text-center">작성한 게시글이 없습니다.</p>`;
+        return;
+      }
+
+      myPosts.forEach(post => {
+        const itemHtml = `
+          <div class="bg-white p-3 rounded-xl border border-gray-100 flex items-center justify-between">
+            <div>
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">${post.type}</span>
+              <h4 class="font-bold text-xs text-gray-800 mt-1">${post.title}</h4>
+              <p class="text-[10px] text-gray-400">${post.createdAt} • 상태: ${post.status}</p>
+            </div>
+            <button onclick="togglePostStatus('${post.id}')" class="text-xs bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg font-bold">
+              상태 변경
+            </button>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', itemHtml);
+      });
+    }
+
+    function openProfileModal() {
+      document.getElementById('editSchool').value = currentUser.school || '안산대학교';
+      document.getElementById('editNickname').value = currentUser.nickname;
+      document.getElementById('editDept').value = currentUser.dept;
+      document.getElementById('profileModal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    function handleSaveProfile(e) {
+      e.preventDefault();
+      const school = document.getElementById('editSchool').value;
+      const nickname = document.getElementById('editNickname').value.trim();
+      const dept = document.getElementById('editDept').value.trim();
+
+      if (!dept) {
+        alert('학과 명시는 필수 요구사항입니다. 예: 컴퓨터공학과');
+        return;
+      }
+
+      currentUser.school = school;
+      currentUser.nickname = nickname;
+      currentUser.dept = dept;
+
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+      activeSchoolFilter = school;
+      document.getElementById('schoolSelect').value = school;
+
+      closeProfileModal();
+      renderApp();
+      alert('프로필이 업데이트되었습니다.');
+    }
+
+    function switchToDemoAccount(accountKey) {
+      if (accountKey === '컴공_김철수') {
+        currentUser = { id: 'usr_default', nickname: '김철수', school: '안산대학교', dept: '컴퓨터공학과' };
+      } else if (accountKey === '간호_이영희') {
+        currentUser = { id: 'usr_demo_1', nickname: '이영희', school: '안산대학교', dept: '간호학과' };
+      } else if (accountKey === '경영_박민수') {
+        currentUser = { id: 'usr_demo_2', nickname: '박민수', school: '안산대학교', dept: '경영학과' };
+      } else if (accountKey === '디자인_최유진') {
+        currentUser = { id: 'usr_demo_3', nickname: '최유진', school: '가톨릭대학교', dept: '시각디자인과' };
+      }
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+      activeSchoolFilter = currentUser.school;
+      document.getElementById('schoolSelect').value = currentUser.school;
+      renderApp();
+      alert(`계정이 '${currentUser.nickname}' (${currentUser.school} ${currentUser.dept})로 전환되었습니다!`);
+    }
+
+    // ================= TABS & FILTERS =================
+    function switchTab(tabName) {
+      const tabs = ['feed', 'request', 'share', 'chat', 'myPage'];
+      tabs.forEach(t => {
+        document.getElementById(`${t}Tab`).classList.add('hidden');
+        const navBtn = document.getElementById(`nav-${t}`);
+        if (navBtn) {
+          navBtn.classList.remove('text-indigo-600');
+          navBtn.classList.add('text-gray-400');
+        }
+      });
+
+      document.getElementById(`${tabName}Tab`).classList.remove('hidden');
+      const activeNav = document.getElementById(`nav-${tabName}`);
+      if (activeNav) {
+        activeNav.classList.remove('text-gray-400');
+        activeNav.classList.add('text-indigo-600');
+      }
+
+      if (tabName === 'chat' && !currentActiveChatId) {
+        document.getElementById('chatRoomView').classList.add('hidden');
+        document.getElementById('chatListView').classList.remove('hidden');
+        renderChatRoomsList();
+      }
+    }
+
+    function filterType(type) {
+      activeTypeFilter = type;
+      document.querySelectorAll('.type-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-gray-100', 'text-gray-600');
+      });
+      const activeBtn = document.getElementById(`filterType${type}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-gray-100', 'text-gray-600');
+        activeBtn.classList.add('bg-indigo-600', 'text-white');
+      }
+      renderPosts();
+    }
+
+    function filterCat(cat) {
+      activeCategoryFilter = cat;
+      renderPosts();
+    }
+
+    function filterPosts() {
+      renderPosts();
+    }
+  </script>
+</body>
+</html>
